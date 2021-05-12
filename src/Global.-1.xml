@@ -1,0 +1,46 @@
+<!-- Xml UI. See documentation: https://api.tabletopsimulator.com/ui/introUI/ -->
+
+<!-- Welcome popup -->
+
+<Panel
+    id="welcome_panel"
+    height="600"
+    width="900"
+    color="rgba(0,0,0,1.0)"
+    hideAnimation="FadeOut"
+    animationDuration="0.5"
+    allowDragging="true"
+    returnToOriginalPositionWhenReleased="false"
+    visibility="hidden"
+    >
+    <Image
+        image="intro"
+        preserveAspect="true"
+        height="600"
+        width="880"
+        rectAlignment="UpperCenter"
+        offsetXY="0 -20"
+        >
+    </Image>
+    
+    <HorizontalLayout
+        id="rollerLayout"
+        rectAlignment="LowerCenter"
+        height="50"
+        width="800"
+        offsetXY="0 20"
+    >  
+        <Text
+            text="Choose number of players"
+            color="white"
+            outline="black"
+            outlineSize="2 2"
+            fontSize="30"
+        ></Text>
+        <Button text="2" id="2" fontSize="30" onClick="TwoPlayers"></Button>
+        <Button text="3" id="3" fontSize="30" onClick="ThreePlayers"></Button>
+        <Button text="4" id="4" fontSize="30" onClick="FourPlayers"></Button>
+        <Button text="5" id="5" fontSize="30" onClick="FivePlayers"></Button>
+        <Button text="6" id="6" fontSize="30" onClick="SixPlayers"></Button>
+    </HorizontalLayout>
+</Panel>
