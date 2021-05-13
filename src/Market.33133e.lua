@@ -267,10 +267,7 @@ function onLoad()
     if not Global.getVar('PlayersSelected') and not Global.getVar('MarketStarted') and not Global.getVar('GameStarted') then
         InitMarket() -- executed here only once
     end
-    Wait.condition(CreateStartButton,
-        function()
-            return Global.getVar('PlayersSelected')
-        end)
+    Wait.condition(CreateStartButton, function() return Global.getVar('PlayersSelected') end)
 end
 
 function onUpdate()

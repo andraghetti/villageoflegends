@@ -183,7 +183,7 @@ function RandomlySelectCharacter()
     local free_characters = {}
     local index = 0
     for name, character in pairs(characters) do
-        if character.selected == false then
+        if character.selected == false and getObjectFromGUID(character.tile_guid) ~= nil then
             index = index + 1
             table.insert(free_characters, index, name)
         end
@@ -197,7 +197,7 @@ function RandomlySelectCharacter()
         -- get the tile and move it on the player board
         local tile = getObjectFromGUID(characters[selected_character_name].tile_guid)
         tile.setPosition(CharacterTileZone.getPosition():copy():add(Vector(0, 1.0, 0)))
-        if math.random() == 0 then tile.flip() end
+        if math.random(2) == 1 then tile.flip() end
         local selected_sex = tile.is_face_down and 'female' or 'male'
         print('Selected: ' .. tostring(selected_character_name) .. ' ' .. selected_sex .. ' version.')
     end

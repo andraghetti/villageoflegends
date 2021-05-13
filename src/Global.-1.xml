@@ -4,8 +4,8 @@
 
 <Panel
     id="welcome_panel"
-    height="600"
-    width="900"
+    height="750"
+    width="800"
     color="rgba(0,0,0,1.0)"
     hideAnimation="FadeOut"
     animationDuration="0.5"
@@ -14,12 +14,9 @@
     visibility="hidden"
     >
     <Image
-        image="intro"
+        image="intro2"
         preserveAspect="true"
-        height="600"
-        width="880"
         rectAlignment="UpperCenter"
-        offsetXY="0 -20"
         >
     </Image>
     
@@ -28,7 +25,7 @@
         rectAlignment="LowerCenter"
         height="50"
         width="800"
-        offsetXY="0 20"
+        offsetXY="-15 20"
     >  
         <Text
             text="Choose number of players"

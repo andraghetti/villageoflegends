@@ -100,20 +100,18 @@ function SixPlayers() SetupPlayers(6) end
 
 
 function onSave()
-    if GameStarted then -- worth to save only if game is started
-        local data_to_save = {
-            game_started = GameStarted,
-            characters = Characters
-        }
-        SavedData = JSON.encode(data_to_save)
-        return SavedData
-    end
+    SavedData = JSON.encode({
+        players_selected = PlayersSelected,
+        game_started = GameStarted,
+        characters = Characters
+    })
+    return SavedData
 end
 
 function onLoad(saved_data)
     if saved_data ~= '' then
         local loaded_data = JSON.decode(saved_data)
-        PlayersSelected = loaded_data.game_started
+        PlayersSelected = loaded_data.players_selected
         MarketStarted = loaded_data.game_started
         GameStarted = loaded_data.game_started
         Characters = loaded_data.characters
@@ -137,7 +135,7 @@ function onLoad(saved_data)
             Necromancer = {current_life_points = 30, max_life = 30, selected=false, tile_guid='d3a57c'},
         }
     end
-    if not GameStarted then
+    if not PlayersSelected and not GameStarted then
         UI.show('welcome_panel')
     end
 end
