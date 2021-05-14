@@ -11,7 +11,7 @@ function SetupPlayers(num_players)
     local colors = Player.getAvailableColors()
 
     -- sort players prioritizing the seated ones
-    table.sort(colors, function(a, b) return Player[a].seated end)
+    -- table.sort(colors, function(a, b) return Player[a].seated end)
 
     -- set the starting position
     local initial_position = {
