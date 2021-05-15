@@ -28,14 +28,30 @@ function LoadCharacter()
     end
     if current_character_name ~= nil then  -- if there is a tile inside
         if CurrentCharacterName == nil then  -- new tile enters
-            self.clearButtons()
+            RemoveButton('RandomlySelectCharacter')
             CurrentCharacterName = current_character_name
             GenerateCounterButtons()
         end
     else -- no tile on the board
         CurrentCharacterName = nil
-        self.clearButtons()
+        RemoveButton('BroadcastValue')
+        RemoveButton('AddFive')
+        RemoveButton('AddOne')
+        RemoveButton('SubtractFive')
+        RemoveButton('SubtractOne')
         CreateRandomSelectionButton()
+    end
+end
+
+function RemoveButton(button_function_name)
+    if self.getButtons() ~= nil then
+        for _, button in ipairs(self.getButtons()) do
+            if button.click_function == button_function_name then
+                if button.index ~= nil then
+                    self.removeButton(button.index)
+                end
+            end
+        end
     end
 end
 
@@ -47,25 +63,25 @@ function SpawnScriptZones()
         type='ScriptingTrigger',
         position = self.getPosition():copy():add(Vector(-2.13, 0.0, 0.61)),
         rotation = self.getRotation(),
-        scale = {6.50, 1.50, 6.45},
+        scale = {6.50, 7, 6.45},
         callback_function=function(zone)
             CharacterTileZone = zone
         end
     })
     spawnObject({
         type='ScriptingTrigger',
-        position = self.getPosition():copy():add(Vector(2.93, 0.0, 1.95)),
+        position = self.getPosition():copy():add(Vector(2.93, 0.0, 1.98)),
         rotation = self.getRotation(),
-        scale = {3, 1.00, 4},
+        scale = {2.8, 3, 3.82},
         callback_function=function(zone)
             DeckZone = zone
         end
     })
     spawnObject({
         type='ScriptingTrigger',
-        position = self.getPosition():copy():add(Vector(2.93, 0.0, -2.19)),
+        position = self.getPosition():copy():add(Vector(2.93, 0.0, -2.22)),
         rotation = self.getRotation(),
-        scale = {3, 1.00, 4},
+        scale = {2.8, 3, 3.82},
         callback_function=function(zone)
             DiscardPileZone = zone
         end
@@ -154,12 +170,30 @@ function GenerateCounterButtons()
 end
 
 function CreateShuffleButton()
-    self.createButton({
-        function_owner = self, click_function = 'ShuffleDiscardPile', label = 'Shuffle\nDeck',
-        position = {0.55, 1.0, -0.3}, width = 500, height = 500, scale={0.3, 1.0, 0.4},
-        color = {0.0, 0.0, 0.0}, font_color = {1.0, 1.0, 1.0}, font_size = 120,
-        tooltip='Shuffle discard pile and recreate your deck'
-    })
+    local function can_shuffle()
+        for _, object in ipairs(DiscardPileZone.getObjects()) do
+            if (object.type == 'Deck' or object.type == 'Card') and object.getName() ~= 'Player Board' then
+                return #DeckZone.getObjects() == 1 and DeckZone.getObjects()[1].getName() == 'Player Board'
+            end
+        end
+        return false
+    end
+    if can_shuffle() then
+        -- the scritping zone has 1 frame in which the deck becomes a card and
+        -- the only card in the script zone is the player board. We fix this
+        -- waiting for some frames
+        Wait.frames(
+            function ()
+                if can_shuffle() then
+                    self.createButton({
+                        function_owner = self, click_function = 'ShuffleDiscardPile', label = 'Shuffle\nDeck',
+                        position = {0.55, 1.0, -0.3}, width = 500, height = 500, scale={0.3, 1.0, 0.4},
+                        color = {0.0, 0.0, 0.0}, font_color = {1.0, 1.0, 1.0}, font_size = 120,
+                        tooltip='Shuffle discard pile and recreate your deck'
+                })
+                end
+            end, 5)
+    end
 end
 
 function CreateRandomSelectionButton()
@@ -215,15 +249,12 @@ function ShuffleDiscardPile()
                 break
             end
         end
-        if not discard_pile.is_face_down then discard_pile.flip() end
-        discard_pile.shuffle()
-        discard_pile.setPosition(DeckZone.getPosition())
-        -- get button to removeButton
-        for _, button in ipairs(self.getButtons()) do
-            if button.click_function == "ShuffleDiscardPile" then
-                self.removeButton(button.index)
-                break
-            end
+        if discard_pile ~= nil then
+            if not discard_pile.is_face_down then discard_pile.flip() end
+            discard_pile.shuffle()
+            discard_pile.setPosition(DeckZone.getPosition():copy():add(Vector(0, 1.0, 0)))
+            discard_pile.shuffle()
+            RemoveButton('ShuffleDiscardPile')
         end
     end
 end
@@ -322,11 +353,12 @@ function onObjectEnterZone(zone, object)
             end
         end
     elseif zone == DeckZone then
-        for _, button in ipairs(self.getButtons()) do
-            if button.click_function == "ShuffleDiscardPile" then
-                self.removeButton(button.index)
-                break
-            end
+        if object.type == 'Deck' or object.type == 'Card' then
+            RemoveButton('ShuffleDiscardPile')
+        end
+    elseif zone == DiscardPileZone then
+        if object.type == 'Deck' or object.type == 'Card' then
+            CreateShuffleButton()
         end
     end
 end
@@ -343,13 +375,13 @@ function onObjectLeaveZone(zone, object)
         end
         LoadCharacter()
     elseif zone == DeckZone then
-        -- the scritping zone has 1 frame in which the deck becomes a card and
-        -- the only card in the script zone is the player board. We fix this
-        -- waiting for 5 frames (to be sure)
-        Wait.frames(function()
-            if #DeckZone.getObjects() == 1 and DeckZone.getObjects()[1].getName() == 'Player Board' then
-                CreateShuffleButton()
-            end
-        end, 5)
+        if object.type == 'Deck' or object.type == 'Card' then
+            CreateShuffleButton()
+        end
+    elseif zone == DiscardPileZone then
+        if (object.type == 'Deck' or object.type == 'Card'
+        ) and #DiscardPileZone.getObjects() == 1 and DiscardPileZone.getObjects()[1].getName() == 'Player Board' then
+            RemoveButton('ShuffleDiscardPile')
+        end
     end
 end
