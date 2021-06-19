@@ -26,6 +26,18 @@ function GetDeckFromZone(zone)
     end
 end
 
+function RemoveButton(button_function_name)
+    if self.getButtons() ~= nil then
+        for _, button in ipairs(self.getButtons()) do
+            if button.click_function == button_function_name then
+                if button.index ~= nil then
+                    self.removeButton(button.index)
+                end
+            end
+        end
+    end
+end
+
 -- CREATION FUNCTIONS
 
 function CreateRefillButton()
@@ -40,14 +52,13 @@ end
 function CreateStartButton()
     self.createButton({
         function_owner = self, click_function = 'StartMarket', label = 'Start',
-        position = {0.0, 1.0, 1.8}, width = 700, height = 300, scale={0.3, 1.0, 0.4},
+        position = {0.0, 1.0, 3.0}, width = 700, height = 300, scale={0.3, 1.0, 0.4},
         color = {0.0, 0.0, 0.0}, font_color = {1.0, 1.0, 1.0}, font_size = 200,
         tooltip="Once you added the expansions to the game you can click here to shuffle the market's decks and deal the cards."
     })
 end
 
 function SpawnZones(decks)
-    -- print("Spawning new scripting zones")
     local CardZones = {}
     for key, deck in pairs(decks) do
         spawnObject({
@@ -58,7 +69,6 @@ function SpawnZones(decks)
                 CardZones[key] = zone
             end
         })
-        -- print("Spawned scripting zone " .. key)
     end
     return CardZones
 end
@@ -81,23 +91,28 @@ function StartMarket()
     CreateRefillButton()
 
     -- Fill the market
-    RefillCards()
+    Wait.frames(RefillCards, 5)
 
     -- Remove unused decks
-    for _, object in ipairs(getObjectFromGUID('bf1b6a').getObjects()) do object.destruct() end
-    for _, object in ipairs(getObjectFromGUID('5ba021').getObjects()) do object.destruct() end
-    for _, object in ipairs(getObjectFromGUID('3bd743').getObjects()) do object.destruct() end
+    Wait.frames(function ()
+        for _, object in ipairs(getObjectFromGUID('bf1b6a').getObjects()) do object.destruct() end
+        for _, object in ipairs(getObjectFromGUID('5ba021').getObjects()) do object.destruct() end
+        for _, object in ipairs(getObjectFromGUID('3bd743').getObjects()) do object.destruct() end
+    end, 5)
+
     -- Remove scripting zones
-    getObjectFromGUID('bf1b6a').destruct()
-    getObjectFromGUID('5ba021').destruct()
-    getObjectFromGUID('3bd743').destruct()
+    Wait.frames(function ()
+        getObjectFromGUID('bf1b6a').destruct()
+        getObjectFromGUID('5ba021').destruct()
+        getObjectFromGUID('3bd743').destruct()
+    end, 5)
 
     Global.setVar('MarketStarted', true)
 end
 
 function RefillCards()
-    -- Remove buttons to prevent other actions to start
-    self.clearButtons()
+    -- Remove this same button to prevent other actions to start
+    RemoveButton('RefillCards')
 
     -- Actual refill
     local main_deck = GetDeckFromZone(MarketDeckZones.main)
@@ -114,13 +129,6 @@ function RefillCards()
             return Card.resting
         end
     )
-    -- local message = ''
-    -- if added_cards > 0 then
-    --     message = "Refilling Market with " .. added_cards .. " cards."
-    -- else
-    --     message = "No refill needed"
-    -- end
-    -- broadcastToAll(message)
 end
 
 function MergeDecksToMarket(deck_list1, market_decks_list2)
@@ -216,6 +224,8 @@ function AddReapersHand()
 end
 
 function InitMarket()
+    -- TODO save the scripting zones guids in saved_data (with object.guid) and handle them without recreating them each time
+    self.clearButtons()
     -- function run once to initialize the market at the first load
     local empty_card_zones_guids = {"a48d03", "dfb0e3", "847317", "e9ea04", "384922"}
     EmptyMarketZones = {}
@@ -224,51 +234,69 @@ function InitMarket()
         table.insert(EmptyMarketZones, id, zone)
     end
 
-    local market_decks = {
-        main = getObjectFromGUID("88c1a4"),
-        beers = getObjectFromGUID('c905b4'),
-        scrolls = getObjectFromGUID('45ddb2'),
-        spells = getObjectFromGUID('fb04df'),
-        potions = getObjectFromGUID('c593d2'),
-        nuggets = getObjectFromGUID('0b5d92'),
-    }
+    if MarketDeckZones == nil then
+        local market_decks = {
+            main = getObjectFromGUID("88c1a4"),
+            beers = getObjectFromGUID('c905b4'),
+            scrolls = getObjectFromGUID('45ddb2'),
+            spells = getObjectFromGUID('fb04df'),
+            potions = getObjectFromGUID('c593d2'),
+            nuggets = getObjectFromGUID('0b5d92'),
+        }
 
-    MarketDeckZones = SpawnZones(market_decks)
+        MarketDeckZones = SpawnZones(market_decks)
+    end
 
-    local scale = {0.3, 1.0, 0.4}
-    local tooltip_text = "Add this expansion cards to the game."
-    self.createButton({
-        function_owner = self, click_function = 'AddAncientGuild',
-        label = 'Add Ancient Guild\nto the game',
-        position = {-0.65, 1.00, -2.9}, width = 1800, height = 500, scale=scale,
-        color = {0.0, 0.0, 0.0}, font_color = {0.3, 0.8, 0.3}, font_size = 200,
-        tooltip=tooltip_text
-    })
-    self.createButton({
-        function_owner = self, click_function = 'AddTheHorde',
-        label = 'Add The Horde\nto the game',
-        position = {1.55, 1.00, -2.9}, width = 1500, height = 500, scale=scale,
-        color = {0.0, 0.0, 0.0}, font_color = {0.9, 0.3, 0.4}, font_size = 200,
-        tooltip=tooltip_text
-    })
-    self.createButton({
-        function_owner = self, click_function = 'AddReapersHand',
-        label = "Add The Reaper's Hand\nto the game",
-        position = {4.5, 1.00, -2.1}, width = 2200, height = 500, scale=scale,
-        color = {0.0, 0.0, 0.0}, font_color = {0.3, 0.3, 0.9}, font_size = 200,
-        tooltip=tooltip_text
-    })
+    if not Global.getVar('GameStarted') then
+        local scale = {0.3, 1.0, 0.4}
+        local tooltip_text = "Add this expansion cards to the game."
+        self.createButton({
+            function_owner = self, click_function = 'AddAncientGuild',
+            label = 'Add Ancient Guild\nto the game',
+            position = {-0.65, 1.00, -2.9}, width = 1800, height = 500, scale=scale,
+            color = {0.0, 0.0, 0.0}, font_color = {0.3, 0.8, 0.3}, font_size = 200,
+            tooltip=tooltip_text
+        })
+        self.createButton({
+            function_owner = self, click_function = 'AddTheHorde',
+            label = 'Add The Horde\nto the game',
+            position = {1.55, 1.00, -2.9}, width = 1500, height = 500, scale=scale,
+            color = {0.0, 0.0, 0.0}, font_color = {0.9, 0.3, 0.4}, font_size = 200,
+            tooltip=tooltip_text
+        })
+        self.createButton({
+            function_owner = self, click_function = 'AddReapersHand',
+            label = "Add The Reaper's Hand\nto the game",
+            position = {4.5, 1.00, -2.1}, width = 2200, height = 500, scale=scale,
+            color = {0.0, 0.0, 0.0}, font_color = {0.3, 0.3, 0.9}, font_size = 200,
+            tooltip=tooltip_text
+        })
+    end
 end
 
 -- TABLETOP FUNCTIONS
 
 function onLoad()
-    -- Create start buttons
-    if not Global.getVar('PlayersSelected') and not Global.getVar('MarketStarted') and not Global.getVar('GameStarted') then
-        InitMarket() -- executed here only once
+    -- Initizalize the market at each load because of the
+    Wait.frames(InitMarket, 5)
+    if Global.getVar('GameStarted') then
+        RemoveButton('RefillCards')
+        Wait.frames(CreateRefillButton, 5)
     end
-    Wait.condition(CreateStartButton, function() return Global.getVar('PlayersSelected') end)
 end
 
 function onUpdate()
+    if not Global.getVar('GameStarted') then
+        local players_ready = 0
+        for _, character in pairs(Global.getTable('Characters')) do
+            if character.selected then
+                players_ready = players_ready + 1
+            end
+        end
+        if players_ready > 0 and Global.getVar('PlayersSelected') == players_ready then
+            CreateStartButton()
+        else
+            RemoveButton('StartMarket')
+        end
+    end
 end

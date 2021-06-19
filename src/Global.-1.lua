@@ -5,13 +5,10 @@ Players = {}
 
 function SetupPlayers(num_players)
     UI.hide('welcome_panel')
-    PlayersSelected = true
+    PlayersSelected = num_players
 
     -- declare a table of all possible players
     local colors = Player.getAvailableColors()
-
-    -- sort players prioritizing the seated ones
-    -- table.sort(colors, function(a, b) return Player[a].seated end)
 
     -- set the starting position
     local initial_position = {
@@ -103,6 +100,7 @@ function onSave()
     SavedData = JSON.encode({
         players_selected = PlayersSelected,
         game_started = GameStarted,
+        market_started = MarketStarted,
         characters = Characters
     })
     return SavedData
@@ -112,11 +110,11 @@ function onLoad(saved_data)
     if saved_data ~= '' then
         local loaded_data = JSON.decode(saved_data)
         PlayersSelected = loaded_data.players_selected
-        MarketStarted = loaded_data.game_started
+        MarketStarted = loaded_data.market_started -- this is here because only Global can have variables that can be changed from other scripts
         GameStarted = loaded_data.game_started
         Characters = loaded_data.characters
     else
-        PlayersSelected = false -- if set, the players tiles are selected and placed on the playerboards
+        PlayersSelected = 0 -- if set, the players tiles are selected and placed on the playerboards
         MarketStarted = false -- if set, the market is ready to be used
         GameStarted = false -- if set, the game is ready to be played
         Characters = {
@@ -135,7 +133,7 @@ function onLoad(saved_data)
             Necromancer = {current_life_points = 30, max_life = 30, selected=false, tile_guid='d3a57c'},
         }
     end
-    if not PlayersSelected and not GameStarted then
+    if PlayersSelected == 0 and not GameStarted then
         UI.show('welcome_panel')
     end
 end
@@ -144,6 +142,7 @@ end
 function onUpdate()
     -- should happen only once when START button is pressed.
     if MarketStarted and not GameStarted then
+        -- GAME STARTS!
         GameStarted = true
         local tokens_zone = getObjectFromGUID('1e4e11')
         local index = 0
@@ -152,18 +151,23 @@ function onUpdate()
             local token = nil
             -- search for token
             for _, object in ipairs(tokens_zone.getObjects()) do
-                if object.getName() == character_tile.getName() then
+                -- in TTS a Token is a Tile :/
+                if object.getName() == character_tile.getName() and object.type == 'Tile' then
                     token = object
                     break
                 end
             end
             if character.selected then -- move the characters tokens
                 character_tile.setLock(true)
-                token.setPosition(character_tile.getPosition():copy():add(Vector(-2.95, 1, -2.95)))
+                if token ~= nil then
+                    token.setPosition(character_tile.getPosition():copy():add(Vector(-2.6, 1, -2.6)))
+                end
             else -- move the unused ones
                 index = index + 1
                 character_tile.setPosition({-50.00, 1.00 + index, 32.00})
-                token.setPosition({-48.00, 1.00 + index, 36.00})
+                if token ~= nil then
+                    token.setPosition({-48.00, 1.00 + index, 36.00})
+                end
             end
         end
         tokens_zone.destruct()

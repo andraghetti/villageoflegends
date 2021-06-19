@@ -20,7 +20,7 @@ function LoadCharacter()
     local current_character_name = nil
     local character_tile = nil
     for _, obj in ipairs(CharacterTileZone.getObjects()) do
-        if obj.type == "Tile" and obj.getName() ~= nil then
+        if obj.type == 'Tile' and obj.getName() ~= nil and obj.getBounds().size.x > 3 then
             character_tile = obj
             current_character_name = character_tile.getName()
             break
@@ -308,6 +308,11 @@ function BroadcastValue()
 end
 
 function SetSnapPoints()
+    -- TODO
+    -- the coordinates are relative and they are in proportion to the scale.
+    -- Note that the function does not add points to existing ones but only sets those
+    -- passed as an argument.
+
     -- local first_defense_snap = {position = DeckZone.getPosition(), rotation = self.getRotation(), rotation_snap = true}
     -- local first_monster_snap = {position = DiscardPileZone.getPosition(), rotation = self.getRotation(), rotation_snap = true}
     -- local snaps = {}
@@ -332,24 +337,42 @@ end
 
 -- TABLETOP FUNCTIONS
 
-function onLoad()
-    if Global.getVar('PlayersSelected') then
-        SpawnScriptZones()
-        Wait.frames(LoadCharacter, 30)
-        Wait.frames(SetSnapPoints, 30)
+function onLoad(saved_data)
+    if saved_data ~= '' then
+        BoardInitialized = saved_data.board_initialized
+    else
+        BoardInitialized = false
     end
+end
 
+function onSave()
+    SavedData = JSON.encode({
+        board_initialized = BoardInitialized
+    })
+    return SavedData
+end
+
+function onUpdate()
+    if not BoardInitialized and Global.getVar('PlayersSelected') > 0 then
+        Wait.frames(SpawnScriptZones, 10)
+        Wait.frames(LoadCharacter, 20)
+        Wait.frames(SetSnapPoints, 30)
+        BoardInitialized = true
+    end
 end
 
 function onObjectEnterZone(zone, object)
     if zone == CharacterTileZone then
-        local characters = Global.getTable('Characters')
-        for char_name, _ in pairs(characters) do
-            if object.getName() == char_name then
-                characters[char_name].selected = true
-                Global.setTable('Characters', characters)
-                LoadCharacter()
-                break
+        -- distinguish the experience token from them character tile
+        if object.type == 'Tile' and object.getBounds().size.x > 3 then
+            local characters = Global.getTable('Characters')
+            for char_name, _ in pairs(characters) do
+                if object.getName() == char_name then
+                    characters[char_name].selected = true
+                    Global.setTable('Characters', characters)
+                    LoadCharacter()
+                    break
+                end
             end
         end
     elseif zone == DeckZone then
@@ -365,15 +388,18 @@ end
 
 function onObjectLeaveZone(zone, object)
     if zone == CharacterTileZone then
-        local characters = Global.getTable('Characters')
-        for char_name, _ in pairs(characters) do
-            if object.getName() == char_name then
-                characters[char_name].selected = false
-                Global.setTable('Characters', characters)
-                break
+        -- distinguish the experience token from them character tile
+        if object.type == 'Tile' and object.getBounds().size.x > 3 then
+            local characters = Global.getTable('Characters')
+            for char_name, _ in pairs(characters) do
+                if object.getName() == char_name then
+                    characters[char_name].selected = false
+                    Global.setTable('Characters', characters)
+                    break
+                end
             end
+            LoadCharacter()
         end
-        LoadCharacter()
     elseif zone == DeckZone then
         if object.type == 'Deck' or object.type == 'Card' then
             CreateShuffleButton()
