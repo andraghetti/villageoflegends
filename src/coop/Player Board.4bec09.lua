@@ -61,7 +61,7 @@ function SpawnScriptZones()
     -- spawns the scripting zone, given the variable and the position
     spawnObject({
         type='ScriptingTrigger',
-        position = self.getPosition():copy():add(Vector(-2.13, 0.0, 0.61)),
+        position = self.getPosition():copy():add(Vector(-2.13, 0.0, 0.13)),
         rotation = self.getRotation(),
         scale = {6.50, 7, 6.45},
         callback_function=function(zone)
@@ -70,18 +70,18 @@ function SpawnScriptZones()
     })
     spawnObject({
         type='ScriptingTrigger',
-        position = self.getPosition():copy():add(Vector(2.93, 0.0, 1.98)),
+        position = self.getPosition():copy():add(Vector(3.28, 0.0, 1.98)),
         rotation = self.getRotation(),
-        scale = {2.8, 3, 3.82},
+        scale = {2.85, 3, 3.85},
         callback_function=function(zone)
             DeckZone = zone
         end
     })
     spawnObject({
         type='ScriptingTrigger',
-        position = self.getPosition():copy():add(Vector(2.93, 0.0, -2.22)),
+        position = self.getPosition():copy():add(Vector(3.28, 0.0, -2.3)),
         rotation = self.getRotation(),
-        scale = {2.8, 3, 3.82},
+        scale = {2.85, 3, 3.85},
         callback_function=function(zone)
             DiscardPileZone = zone
         end
@@ -98,13 +98,13 @@ function GenerateCounterButtons()
     -- Value button parameters (this is what shows the current LifePointsCount)
 
     local counter_button_size = 400
-    local counter_button_horizontal_position = -0.4   -- Negative for left, positive for right
-    local counter_button_vertical_position = 1.2   -- Negative for up, positive for down
+    local counter_button_horizontal_position = -0.38   -- Negative for left, positive for right
+    local counter_button_vertical_position = 1.3  -- Negative for up, positive for down
     CounterFontSize = counter_button_size * 0.7
 
     -- small buttons parameters
-    local small_button_scale_ratio = 0.6
-    local small_button_horizontal_offset = counter_button_size * 0.0005
+    local small_button_scale_ratio = 0.7
+    local small_button_horizontal_offset = counter_button_size * 0.00051
     local small_button_vertical_offset = -0.0
 
     CounterButtonParams = {
@@ -187,7 +187,7 @@ function CreateShuffleButton()
                 if can_shuffle() then
                     self.createButton({
                         function_owner = self, click_function = 'ShuffleDiscardPile', label = 'Shuffle\nDeck',
-                        position = {0.55, 1.0, -0.3}, width = 500, height = 500, scale={0.3, 1.0, 0.4},
+                        position = {0.57, 1.0, -0.7}, width = 500, height = 500, scale={0.3, 1.0, 0.4},
                         color = {0.0, 0.0, 0.0}, font_color = {1.0, 1.0, 1.0}, font_size = 120,
                         tooltip='Shuffle discard pile and recreate your deck'
                 })
@@ -199,7 +199,7 @@ end
 function CreateRandomSelectionButton()
     self.createButton({
         function_owner = self, click_function = 'RandomlySelectCharacter', label = 'Select a\nrandom\ncharacter',
-        position = {-0.4, 1.1, 0.3}, width = 700, height = 700, scale={0.3, 1.0, 0.4},
+        position = {-0.4, 1.1, 0.6}, width = 700, height = 700, scale={0.3, 1.0, 0.5},
         color = {0.0, 0.0, 0.0}, font_color = {1.0, 1.0, 1.0}, font_size = 120,
         tooltip='Select a random character'
     })
@@ -227,6 +227,7 @@ function RandomlySelectCharacter()
         -- get the tile and move it on the player board
         local tile = getObjectFromGUID(characters[selected_character_name].tile_guid)
         tile.setPosition(CharacterTileZone.getPosition():copy():add(Vector(0, 1.0, 0)))
+        tile.setRotation({0, 180, 0})
         if math.random(2) == 1 then tile.flip() end
         local selected_sex = tile.is_face_down and 'female' or 'male'
         print('Selected: ' .. tostring(selected_character_name) .. ' ' .. selected_sex .. ' version.')
@@ -250,9 +251,9 @@ function ShuffleDiscardPile()
             end
         end
         if discard_pile ~= nil then
-            if not discard_pile.is_face_down then discard_pile.flip() end
             discard_pile.shuffle()
             discard_pile.setPosition(DeckZone.getPosition():copy():add(Vector(0, 1.0, 0)))
+            discard_pile.setRotation({0, 180, 180})  -- Z=180 is face down
             discard_pile.shuffle()
             RemoveButton('ShuffleDiscardPile')
         end

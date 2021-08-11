@@ -43,8 +43,8 @@ end
 function CreateRefillButton()
     self.createButton({
         function_owner = self, click_function = 'RefillCards', label = 'Refill\nMarket',
-        position = {0.0, 1.0, 1.7}, width = 250, height = 250, scale={0.3, 1.0, 0.4},
-        color = {0.0, 0.0, 0.0}, font_color = {1.0, 1.0, 1.0}, font_size = 60,
+        position = {0.0, 1.0, 1.7}, width = 500, height = 300, scale={0.3, 1.0, 0.5},
+        color = {0.0, 0.0, 0.0}, font_color = {1.0, 1.0, 1.0}, font_size = 90,
         tooltip = "Refill the market in case some cards have been bought"
     })
 end
@@ -119,7 +119,7 @@ function RefillCards()
     local added_cards = 0
     for _, zone in pairs(EmptyMarketZones) do
         if #zone.getObjects() == 1 and zone.getObjects()[1].getName() == "Market" then
-            Card = main_deck.takeObject({flip=true, position=zone.getPosition()})
+            Card = main_deck.takeObject({position=zone.getPosition(), rotation={0,180,0}})
             added_cards = added_cards +1
         end
     end
@@ -135,7 +135,7 @@ function MergeDecksToMarket(deck_list1, market_decks_list2)
     for expansion_deck, market_deck_zone in zip(deck_list1, market_decks_list2) do
         local market_deck = GetDeckFromZone(market_deck_zone)
         expansion_deck.setPosition({market_deck.getPosition()[1], market_deck.getPosition()[2]+1, market_deck.getPosition()[3]})
-        expansion_deck.setRotation(market_deck.getRotation())
+        expansion_deck.setRotation({0, 180, market_deck.getRotation()[3]})
     end
 end
 
@@ -224,7 +224,6 @@ function AddReapersHand()
 end
 
 function InitMarket()
-    -- TODO save the scripting zones guids in saved_data (with object.guid) and handle them without recreating them each time
     self.clearButtons()
     -- function run once to initialize the market at the first load
     local empty_card_zones_guids = {"a48d03", "dfb0e3", "847317", "e9ea04", "384922"}

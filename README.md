@@ -1,6 +1,7 @@
 # Village of Legends - Steam TTS workshop
+
 ![background](imgs/background.jpg)
-Tabletop Simulator Workshop for [Village of Legends boardgame](https://www.pelotology.com). 
+Tabletop Simulator Workshop for [Village of Legends boardgame](https://www.pelotology.com).
 
 You can:
 
@@ -10,12 +11,23 @@ You can:
 - watch a video about rules of the base game [here](https://www.youtube.com/watch?v=WD-RvsNV3Ls)
 - watch a gameplay of the last expansion [here](https://www.youtube.com/watch?v=Ukg3ufXSlao)
 
-The workshop can be found [here on Steam](https://steamcommunity.com/sharedfiles/filedetails/?id=2472269863)
+<hr>
 
-# Lua source code
+# Steam Workshops
+
+There are two workshops available on Steam. Click on one of the following badges:
+
+- [![PvP Mode](https://img.shields.io/badge/PvP Mode-grey?logo=steam&style=for-the-badge)](https://steamcommunity.com/sharedfiles/filedetails/?id=2472269863)
+- [![Coop Mode](https://img.shields.io/badge/Coop Mode-Beta-green?logo=steam&style=for-the-badge)](https://steamcommunity.com/sharedfiles/filedetails/?id=2592732845)
+
+<hr>
+
+## [![Lua](https://img.shields.io/badge/Lua-2244FF?logo=lua)](https://www.lua.org/)   Lua source code
+
 The game has been created using [Tabletop Simulator API](https://api.tabletopsimulator.com/).
-The source code is in [Lua](https://www.lua.org/pil/1.html) and it is mainly composed by 3 files:
+The source code is in [Lua](https://www.lua.org/pil/1.html) and it has two modes:
 
-- `Global`: code related to the global environment of the game, handling the players placement and their playing boards and starting decks.
-- `Market`: code related to all the market automation, like the shuffling of the main decks and the first deal of the cards of the market. There is also a refill button to add a new card once an item is bought.
-- `Player Board`: code related to the player board automation, like the life points counters and the random selection of a character.
+- [PvP mode](src/pvp/README.md)
+- [Coop mode](src/coop/README.md)
+
+Each directory contains the lua scripts relative to in-game objects. If you need to use the code, I suggest you to copy paste the code that you need into the object that are in your own workshop.

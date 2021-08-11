@@ -3,6 +3,10 @@ Market = getObjectFromGUID('33133e')
 Players = {}
 
 
+function ShowTable()
+    UI.hide('welcome_panel')
+end
+
 function SetupPlayers(num_players)
     UI.hide('welcome_panel')
     PlayersSelected = num_players
@@ -20,8 +24,10 @@ function SetupPlayers(num_players)
     -- starting board and deck available and moved on the side
     local board = getObjectFromGUID('4bec09')
     board.setPosition({-40.00, 1.00, 20.00})
+    board.setRotation({0, 180, 0})
     local starting_deck = getObjectFromGUID('fc501f')
     starting_deck.setPosition({-40.00, 1.00, 18.00})
+    starting_deck.setRotation({0, 180, 180})  -- Z=180 is face down
 
     local angle_step = (num_players%2==0 and 180 or 120) / num_players
     local vertical_offset = 20
@@ -68,14 +74,15 @@ function SetupPlayers(num_players)
             -- get a copy of the board
             local current_board = board.clone()
             local board_position = transform.position:add(Vector(0,0,10)) --moveTowards(Vector(0, 0, 20), 10.0)
-            current_board.setPosition({board_position[1], 1.0, board_position[3]})
-            -- current_board.setRotation(transform.rotation:add(Vector(0, 180, 0)))
+            current_board.setPosition(Vector(board_position[1], 1.0, board_position[3]))
+            current_board.setRotation({0, 180, 0})
 
             -- get a copy of the starting deck
             local current_deck = starting_deck.clone()
             current_deck.shuffle()
-            local deck_position = board_position:copy():add(current_deck.positionToWorld(Vector(2.43, 0.0, -1.69)))
-            current_deck.setPosition({deck_position[1], 1.0, deck_position[3]})
+            local deck_position = board_position:copy():add(current_deck.positionToWorld(Vector(2.75, 0.0, -1.65)))
+            current_deck.setPosition(Vector(deck_position[1], 1.0, deck_position[3]))
+            current_deck.setRotation({0, 180, 180})  -- Z=180 is face down
 
         else
             Player[color].setHandTransform({
@@ -151,7 +158,6 @@ function onUpdate()
             local token = nil
             -- search for token
             for _, object in ipairs(tokens_zone.getObjects()) do
-                -- in TTS a Token is a Tile :/
                 if object.getName() == character_tile.getName() and object.type == 'Tile' then
                     token = object
                     break
@@ -161,17 +167,18 @@ function onUpdate()
                 character_tile.setLock(true)
                 if token ~= nil then
                     token.setPosition(character_tile.getPosition():copy():add(Vector(-2.6, 1, -2.6)))
+                    token.setRotation({0, 180, 0})
                 end
             else -- move the unused ones
                 index = index + 1
                 character_tile.setPosition({-50.00, 1.00 + index, 32.00})
+                character_tile.setRotation({0, 180, character_tile.getRotation()[3]})
                 if token ~= nil then
                     token.setPosition({-48.00, 1.00 + index, 36.00})
+                    token.setRotation({0, 180, 0})
                 end
             end
         end
         tokens_zone.destruct()
-        -- move characters picker out
-        getObjectFromGUID('e6589a').setPosition({-40.00, 1.00, 32.00})
     end
 end
