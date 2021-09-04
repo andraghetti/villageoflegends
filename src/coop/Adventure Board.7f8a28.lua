@@ -56,43 +56,28 @@ function MoveAdventureCard53(); MoveAdventureCard(53); end
 function MoveAdventureCard54(); MoveAdventureCard(54); end
 function MoveAdventureCard55(); MoveAdventureCard(55); end
 
-function onLoad(saved_data)
-    local adventure_deck = nil
-    if saved_data ~= '' then
-        local loaded_data = JSON.decode(saved_data)
-        BoardInitialized = false--loaded_data.board_initialized
-        adventure_deck = getObjectFromGUID(loaded_data.adventure_deck_guid)
-    else
-        BoardInitialized = false
-        AdventureDeckGUID = '9fff7c'
-        adventure_deck = getObjectFromGUID(AdventureDeckGUID)
-        -- give index as name of cards  (already done, not needed)
-        -- SpawnScriptZones(adventure_deck)
-        -- for _, card in ipairs(adventure_deck.getObjects()) do
-        --     local card_obj = adventure_deck.takeObject()
-        --     card_obj.setName(card.index)
-        --     card_obj.setPosition(MainAdventureDeckZone.getPosition())
-        -- end
-        -- get guid of resulting deck
-        for _, object in ipairs(MainAdventureDeckZone.getObjects()) do
-            if object.type == 'Deck' then
-                AdventureDeckGUID = object.guid
-            end
-        end
-    end
-    if not BoardInitialized then
-        SpawnScriptZones(adventure_deck)
-        CreateAdventureButtons()
-        BoardInitialized = true
-    end
-end
 
-function onSave()
-    SavedData = JSON.encode({
-        board_initialized = BoardInitialized,
-        adventure_deck_guid = AdventureDeckGUID
-    })
-    return SavedData
+-- function CreateDeck()
+--     -- give index as name of cards  (already done, not needed)
+--         -- SpawnScriptZones(adventure_deck)
+--         -- for _, card in ipairs(adventure_deck.getObjects()) do
+--         --     local card_obj = adventure_deck.takeObject()
+--         --     card_obj.setName(card.index)
+--         --     card_obj.setPosition(MainAdventureDeckZone.getPosition())
+--         -- end
+-- end
+
+-- -- get guid of resulting deck
+-- for _, object in ipairs(MainAdventureDeckZone.getObjects()) do
+--     if object.type == 'Deck' then
+--         AdventureDeckGUID = object.guid
+--     end
+-- end
+
+function onLoad()
+    MainAdventureDeckZone = getObjectFromGUID('c2315c')
+    SelectedAdventureDeckZone = getObjectFromGUID('82e1b1')
+    CreateAdventureButtons(false)
 end
 
 function SpawnScriptZones(adventure_deck)
@@ -112,7 +97,7 @@ function SpawnScriptZones(adventure_deck)
     })
 end
 
-function CreateAdventureButtons()
+function CreateAdventureButtons(reset)
     self.clearButtons()
     for i = 0, 56, 1 do
         local vertical_offset = -1.2 + (i - i % 10)/ 10 / 6 * 3 -- 6 rows of 10.  *2 is to spread between in range [-1 , 1]
@@ -135,6 +120,26 @@ function CreateAdventureButtons()
             })
         end
     end
+    -- change buttons for cards that are in SelectedZone
+    if not reset then
+        for _, object in pairs(SelectedAdventureDeckZone.getObjects()) do
+            local selected_card = nil
+            if object ~= nil then
+                if object.type == 'Card' and object.getName() ~= 'Adventure Board' then
+                    -- object could be just a single card (and it has no name if it's face down)
+                    selected_card = object
+                elseif object.type == 'Deck' then
+                    for _, card in pairs(object.getObjects()) do
+                        selected_card = object.takeObject({index = card.index})
+                        if selected_card ~= nil then
+                            ChangeColorButton('MoveAdventureCard'..selected_card.getName(), true)
+                            selected_card.setPosition(selected_card.getPosition():copy():add(Vector(0,5,0)))
+                        end
+                    end
+                end
+            end
+        end
+    end
 end
 
 function ResetAdventure()
@@ -145,7 +150,7 @@ function ResetAdventure()
             object.setPosition(MainAdventureDeckZone.getPosition())
         end
     end
-    CreateAdventureButtons()
+    CreateAdventureButtons(true)
 end
 
 function ChangeColorButton(button_function_name, is_on)

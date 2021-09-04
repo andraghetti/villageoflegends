@@ -58,21 +58,6 @@ function CreateStartButton()
     })
 end
 
-function SpawnZones(decks)
-    local CardZones = {}
-    for key, deck in pairs(decks) do
-        spawnObject({
-            type='ScriptingTrigger',
-            position = deck.getPosition(),
-            scale = {deck.getBounds().size[1], 5, deck.getBounds().size[3]},  -- for safety, we get a very tall size for big decks.
-            callback_function=function(zone)
-                CardZones[key] = zone
-            end
-        })
-    end
-    return CardZones
-end
-
 -- BUTTONS FUNCTIONS
 
 function StartMarket()
@@ -232,17 +217,15 @@ function InitMarket()
     end
 
     if MarketDeckZones == nil then
-        local market_decks = {
-            main = getObjectFromGUID('be4aff'),
-            monsters = getObjectFromGUID('139872'),
-            beers = getObjectFromGUID('c905b4'),
-            scrolls = getObjectFromGUID('45ddb2'),
-            spells = getObjectFromGUID('fb04df'),
-            potions = getObjectFromGUID('c593d2'),
-            nuggets = getObjectFromGUID('0b5d92'),
+        MarketDeckZones = {
+            main = getObjectFromGUID('640a84'),
+            monsters = getObjectFromGUID('9d8d9d'),
+            beers = getObjectFromGUID('488652'),
+            scrolls = getObjectFromGUID('5c892f'),
+            spells = getObjectFromGUID('985355'),
+            potions = getObjectFromGUID('03781b'),
+            nuggets = getObjectFromGUID('4da1c1'),
         }
-
-        MarketDeckZones = SpawnZones(market_decks)
     end
 
     if not Global.getVar('GameStarted') then
