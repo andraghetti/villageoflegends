@@ -21,81 +21,100 @@ function SetupPlayers(num_players)
         scale    = Vector(12.00, 12.00, 7.00),
     }
 
-    -- starting board and deck available and moved on the side
     local board = getObjectFromGUID('4bec09')
-    board.setPosition({-40.00, 1.00, 20.00})
-    board.setRotation({0, 180, 0})
-    local starting_deck = getObjectFromGUID('fc501f')
-    starting_deck.setPosition({-40.00, 1.00, 18.00})
-    starting_deck.setRotation({0, 180, 180})  -- Z=180 is face down
+    if num_players > 1 then
+        -- starting board and deck available and moved on the side
+        board.setPosition({-40.00, 1.00, 20.00})
+        board.setRotation({0, 180, 0})
+        local starting_deck = getObjectFromGUID('fc501f')
+        starting_deck.setPosition({-40.00, 1.00, 18.00})
+        starting_deck.setRotation({0, 180, 180})  -- Z=180 is face down
 
-    local angle_step = (num_players%2==0 and 180 or 120) / num_players
-    local vertical_offset = 20
+        local angle_step = (num_players%2==0 and 180 or 120) / num_players
+        local vertical_offset = 20
 
-    -- loop through the player hands, relocating them based on the number of players
-    local fixed_players = 0
-    for i, color in ipairs(colors) do
-        if fixed_players < num_players then
-            local swap_direction = i%2==0 and 1 or -1
-            -- the final result should be a displacement of (-2, -1, 0, 1, 2) or (-2, -1, 0, 0, 1, 2)
-            local player_ratio = num_players%2==0 and (
-                i%2==0 and math.floor((i-1)/2) or math.floor(i/2)) or ( -- if players are even
-                    math.floor(i/2) -- if players are odd
-                )
+        -- loop through the player hands, relocating them based on the number of players
+        local fixed_players = 0
+        for i, color in ipairs(colors) do
+            if fixed_players < num_players then
+                local swap_direction = i%2==0 and 1 or -1
+                -- the final result should be a displacement of (-2, -1, 0, 1, 2) or (-2, -1, 0, 0, 1, 2)
+                local player_ratio = num_players%2==0 and (
+                    i%2==0 and math.floor((i-1)/2) or math.floor(i/2)) or ( -- if players are even
+                        math.floor(i/2) -- if players are odd
+                    )
 
-            local rotation_angle = 0 -- player_ratio * swap_direction * angle_step
-            local horizontal_offset = -swap_direction * (num_players%2==0 and 5 or 2)
-            local rotate_over_angle = player_ratio * swap_direction * angle_step
+                local rotation_angle = 0 -- player_ratio * swap_direction * angle_step
+                local horizontal_offset = -swap_direction * (num_players%2==0 and 5 or 2)
+                local rotate_over_angle = player_ratio * swap_direction * angle_step
 
-            -- horrible way to handle special cases
-            if num_players%2==0 then
-                if i==1 or i==2 then
-                    horizontal_offset = -swap_direction*10
+                -- horrible way to handle special cases
+                if num_players%2==0 then
+                    if i==1 or i==2 then
+                        horizontal_offset = -swap_direction*10
+                    end
+                    if (i==3 or i==4) and num_players==4 then
+                        horizontal_offset = swap_direction*5
+                    end
+                    if i==5 or i==6 then
+                        horizontal_offset = swap_direction*2
+                    end
                 end
-                if (i==3 or i==4) and num_players==4 then
-                    horizontal_offset = swap_direction*5
-                end
-                if i==5 or i==6 then
-                    horizontal_offset = swap_direction*2
-                end
+
+                -- print(tostring(i) .. ' ' .. tostring(horizontal_offset))
+
+                -- move the hand-zone and the player board with all details based on the rotation
+                local transform = {
+                    position = initial_position.position:copy():rotateOver('y', rotate_over_angle):add(Vector(horizontal_offset, 0, vertical_offset)),
+                    rotation = initial_position.rotation:copy():add(Vector(0, rotation_angle, 0)),
+                    scale    = initial_position.scale
+                }
+                Player[color].setHandTransform(transform)
+                fixed_players = fixed_players + 1
+
+                -- get a copy of the board
+                local current_board = board.clone()
+                local board_position = transform.position:add(Vector(0,0,10)) --moveTowards(Vector(0, 0, 20), 10.0)
+                current_board.setPosition(Vector(board_position[1], 1.0, board_position[3]))
+                current_board.setRotation({0, 180, 0})
+
+                -- get a copy of the starting deck
+                local current_deck = starting_deck.clone()
+                current_deck.shuffle()
+                local deck_position = board_position:copy():add(current_deck.positionToWorld(Vector(2.75, 0.0, -1.65)))
+                current_deck.setPosition(Vector(deck_position[1], 1.0, deck_position[3]))
+                current_deck.setRotation({0, 180, 180})  -- Z=180 is face down
+
+            else
+                Player[color].setHandTransform({
+                    position = initial_position.position,
+                    rotation = initial_position.rotation,
+                    scale    = initial_position.scale,
+                })
             end
-
-            -- print(tostring(i) .. ' ' .. tostring(horizontal_offset))
-
-            -- move the hand-zone and the player board with all details based on the rotation
-            local transform = {
-                position = initial_position.position:copy():rotateOver('y', rotate_over_angle):add(Vector(horizontal_offset, 0, vertical_offset)),
-                rotation = initial_position.rotation:copy():add(Vector(0, rotation_angle, 0)),
-                scale    = initial_position.scale
-            }
-            Player[color].setHandTransform(transform)
-            fixed_players = fixed_players + 1
-
-            -- get a copy of the board
-            local current_board = board.clone()
-            local board_position = transform.position:add(Vector(0,0,10)) --moveTowards(Vector(0, 0, 20), 10.0)
-            current_board.setPosition(Vector(board_position[1], 1.0, board_position[3]))
-            current_board.setRotation({0, 180, 0})
-
-            -- get a copy of the starting deck
-            local current_deck = starting_deck.clone()
-            current_deck.shuffle()
-            local deck_position = board_position:copy():add(current_deck.positionToWorld(Vector(2.75, 0.0, -1.65)))
-            current_deck.setPosition(Vector(deck_position[1], 1.0, deck_position[3]))
-            current_deck.setRotation({0, 180, 180})  -- Z=180 is face down
-
-        else
-            Player[color].setHandTransform({
-                position = initial_position.position,
-                rotation = initial_position.rotation,
-                scale    = initial_position.scale,
-            })
+        end
+        board.destruct()
+        starting_deck.destruct()
+    else -- if it's only one player we move only the hand zones
+        for i, color in ipairs(colors) do
+            if i == 1 then
+                Player[color].setHandTransform({
+                    position = board.getPosition():copy():add(Vector(0,0,-10)),
+                    rotation = initial_position.rotation,
+                    scale    = initial_position.scale,
+                })
+            else
+                Player[color].setHandTransform({
+                    position = initial_position.position,
+                    rotation = initial_position.rotation,
+                    scale    = initial_position.scale,
+                })
+            end
         end
     end
-    board.destruct()
-    starting_deck.destruct()
 end
 
+function OnePlayer() SetupPlayers(1) end
 function TwoPlayers() SetupPlayers(2) end
 function ThreePlayers() SetupPlayers(3) end
 function FourPlayers() SetupPlayers(4) end

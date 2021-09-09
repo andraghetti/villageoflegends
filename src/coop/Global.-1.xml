@@ -34,11 +34,12 @@
             outlineSize="2 2"
             fontSize="30"
         ></Text>
+        <Button text="1" id="1" fontSize="30" onClick="OnePlayer"></Button>
         <Button text="2" id="2" fontSize="30" onClick="TwoPlayers"></Button>
         <Button text="3" id="3" fontSize="30" onClick="ThreePlayers"></Button>
         <Button text="4" id="4" fontSize="30" onClick="FourPlayers"></Button>
         <Button text="5" id="5" fontSize="30" onClick="FivePlayers"></Button>
         <Button text="6" id="6" fontSize="30" onClick="SixPlayers"></Button>
-        <Button text="X" id="6" fontSize="30" onClick="ShowTable"></Button>
+        <!-- <Button text="X" id="6" fontSize="30" onClick="ShowTable"></Button> -->
     </HorizontalLayout>
 </Panel>

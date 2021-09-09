@@ -59,6 +59,7 @@ end
 
 function SpawnScriptZones()
     -- spawns the scripting zone, given the variable and the position
+    -- not used at load time
     spawnObject({
         type='ScriptingTrigger',
         position = self.getPosition():copy():add(Vector(-2.13, 0.0, 0.13)),
