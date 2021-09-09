@@ -2,6 +2,10 @@
 Market = getObjectFromGUID('33133e')
 Players = {}
 
+function ShowTable()
+    UI.hide('welcome_panel')
+end
+
 
 function SetupPlayers(num_players)
     UI.hide('welcome_panel')

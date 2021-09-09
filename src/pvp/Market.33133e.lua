@@ -3,21 +3,6 @@
 -- Table to store the names of the added expansions
 AddedExpansions = {'Base Game'}
 
-function zip(...)
-    -- Python-like zip() iterator
-    local arrays, ans = {...}, {}
-    local index = 0
-    return
-    function()
-        index = index + 1
-        for i,t in ipairs(arrays) do
-            if type(t) == 'function' then ans[i] = t() else ans[i] = t[index] end
-            if ans[i] == nil then return end
-        end
-        return unpack(ans)
-    end
-end
-
 function GetDeckFromZone(zone)
     for _, obj in ipairs(zone.getObjects()) do --returns the zone object table in the for each/pairs loop
         if obj.type == "Deck" then --if the object has the deck type
@@ -56,21 +41,6 @@ function CreateStartButton()
         color = {0.0, 0.0, 0.0}, font_color = {1.0, 1.0, 1.0}, font_size = 200,
         tooltip="Once you added the expansions to the game you can click here to shuffle the market's decks and deal the cards."
     })
-end
-
-function SpawnZones(decks)
-    local CardZones = {}
-    for key, deck in pairs(decks) do
-        spawnObject({
-            type='ScriptingTrigger',
-            position = deck.getPosition(),
-            scale = {deck.getBounds().size[1], 5, deck.getBounds().size[3]},  -- for safety, we get a very tall size for big decks.
-            callback_function=function(zone)
-                CardZones[key] = zone
-            end
-        })
-    end
-    return CardZones
 end
 
 -- BUTTONS FUNCTIONS
@@ -131,8 +101,9 @@ function RefillCards()
     )
 end
 
-function MergeDecksToMarket(deck_list1, market_decks_list2)
-    for expansion_deck, market_deck_zone in zip(deck_list1, market_decks_list2) do
+function MergeDecksToMarket(deck_list)
+    for market_deck_zone_name, expansion_deck in pairs(deck_list) do
+        local market_deck_zone = MarketDeckZones[market_deck_zone_name]
         local market_deck = GetDeckFromZone(market_deck_zone)
         expansion_deck.setPosition({market_deck.getPosition()[1], market_deck.getPosition()[2]+1, market_deck.getPosition()[3]})
         expansion_deck.setRotation({0, 180, market_deck.getRotation()[3]})
@@ -146,27 +117,18 @@ end
 
 function AddAncientGuild()
     -- Search for button and remove it
-    for _, button in ipairs(self.getButtons()) do
-        if button.click_function == "AddAncientGuild" then
-            self.removeButton(button.index)
-            break
-        end
-    end
+    RemoveButton('AddAncientGuild')
 
     -- Get decks
     local expansion_decks = {
-        getObjectFromGUID('e988c1'), -- scrolls
-        getObjectFromGUID('ee0a0a'), -- spells
-        getObjectFromGUID('85d8ec'), -- potions
-        getObjectFromGUID('569860'), -- nuggets
-        getObjectFromGUID('661223'), -- main
-    }
-    local market_decks_zones = {
-        MarketDeckZones.scrolls, MarketDeckZones.spells, MarketDeckZones.potions,
-        MarketDeckZones.nuggets, MarketDeckZones.main
+        scrolls = getObjectFromGUID('e988c1'),
+        spells = getObjectFromGUID('ee0a0a'),
+        potions = getObjectFromGUID('85d8ec'),
+        nuggets = getObjectFromGUID('569860'),
+        main = getObjectFromGUID('661223'),
     }
     -- Merge decks
-    MergeDecksToMarket(expansion_decks, market_decks_zones)
+    MergeDecksToMarket(expansion_decks)
 
     -- Add the name of the expansion
     BroadcastAddition("Ancient Guild")
@@ -174,23 +136,17 @@ end
 
 function AddTheHorde()
     -- Search for button and remove it
-    for _, button in ipairs(self.getButtons()) do
-        if button.click_function == "AddTheHorde" then
-            self.removeButton(button.index)
-            break
-        end
-    end
+    RemoveButton('AddTheHorde')
 
     -- Get decks
     local expansion_decks = {
-        getObjectFromGUID('bbf4dc'), -- spells
-        getObjectFromGUID('f31506'), -- potions
-        getObjectFromGUID('a6166d'), -- main
+        spells = getObjectFromGUID('bbf4dc'),
+        potions = getObjectFromGUID('f31506'),
+        main = getObjectFromGUID('a6166d'),
     }
-    local market_decks_zones = {MarketDeckZones.spells, MarketDeckZones.potions, MarketDeckZones.main}
 
     -- Merge decks
-    MergeDecksToMarket(expansion_decks, market_decks_zones)
+    MergeDecksToMarket(expansion_decks)
 
     -- Add the name of the expansion
     BroadcastAddition("The Horde")
@@ -198,26 +154,18 @@ end
 
 function AddReapersHand()
     -- Search for button and remove it
-    for _, button in ipairs(self.getButtons()) do
-        if button.click_function == "AddReapersHand" then
-            self.removeButton(button.index)
-            break
-        end
-    end
+    RemoveButton('AddReapersHand')
 
     -- Get decks
     local expansion_decks = {
-        getObjectFromGUID('5e987a'), -- scrolls
-        getObjectFromGUID('70196f'), -- spells
-        getObjectFromGUID('eaa7b0'), -- potions
-        getObjectFromGUID('6ba05a'), -- nuggets
-        getObjectFromGUID('c4b2ee'), -- main
-    }
-    local market_decks_zones = {
-        MarketDeckZones.scrolls, MarketDeckZones.spells, MarketDeckZones.potions, MarketDeckZones.nuggets, MarketDeckZones.main
+        scrolls = getObjectFromGUID('5e987a'),
+        spells = getObjectFromGUID('70196f'),
+        potions = getObjectFromGUID('eaa7b0'),
+        nuggets = getObjectFromGUID('6ba05a'),
+        main = getObjectFromGUID('c4b2ee'),
     }
     -- Merge decks
-    MergeDecksToMarket(expansion_decks, market_decks_zones)
+    MergeDecksToMarket(expansion_decks)
 
     -- Add the name of the expansion
     BroadcastAddition("The Reaper's Hand")
@@ -234,16 +182,14 @@ function InitMarket()
     end
 
     if MarketDeckZones == nil then
-        local market_decks = {
-            main = getObjectFromGUID("88c1a4"),
-            beers = getObjectFromGUID('c905b4'),
-            scrolls = getObjectFromGUID('45ddb2'),
-            spells = getObjectFromGUID('fb04df'),
-            potions = getObjectFromGUID('c593d2'),
-            nuggets = getObjectFromGUID('0b5d92'),
+        MarketDeckZones = {
+            main = getObjectFromGUID('56f136'),
+            beers = getObjectFromGUID('dc6eb8'),
+            scrolls = getObjectFromGUID('d73d71'),
+            spells = getObjectFromGUID('04859c'),
+            potions = getObjectFromGUID('1d69f2'),
+            nuggets = getObjectFromGUID('cae607'),
         }
-
-        MarketDeckZones = SpawnZones(market_decks)
     end
 
     if not Global.getVar('GameStarted') then

@@ -39,5 +39,6 @@
         <Button text="4" id="4" fontSize="30" onClick="FourPlayers"></Button>
         <Button text="5" id="5" fontSize="30" onClick="FivePlayers"></Button>
         <Button text="6" id="6" fontSize="30" onClick="SixPlayers"></Button>
+        <!-- <Button text="X" id="none" fontSize="30" onClick="ShowTable"></Button> -->
     </HorizontalLayout>
 </Panel>
